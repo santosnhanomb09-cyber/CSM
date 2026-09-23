@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro Saber Mais - Gestão de Nanocentro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            600: '#1e3a8a',
+                            700: '#1e40af',
+                            800: '#172554',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-navy-50 text-navy-900 min-h-screen flex flex-col">
+
+    <header class="bg-navy-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <!-- Logo Upload Container -->
+                <div id="logo-container" class="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer relative group" title="Clique para carregar o Logo">
+                    <img id="logo-preview" src="" alt="Logo" class="w-full h-full object-cover hidden">
+                    <i id="logo-icon" class="fa-solid fa-graduation-cap text-white text-xl"></i>
+                    <input type="file" id="logo-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Centro Saber Mais</h1>
+                    <p class="text-xs text-blue-200">Nanocentro (Fev - 14 Nov)</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span id="auth-status" class="text-xs bg-navy-800 text-blue-200 px-3 py-1.5 rounded-lg border border-blue-900/50 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                    Conectando ao Firebase...
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-white border-b border-navy-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-2 md:space-x-8 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn py-4 px-3 border-b-2 font-medium text-sm flex items-center gap-2 transition-all border-navy-800 text-navy-800">
+                <i class="fa-solid fa-chart-pie"></i> Painel Geral
+            </button>
+            <button onclick="switchTab('students')" id="nav-students" class="tab-btn py-4 px-3 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-navy-800 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-users"></i> Alunos & Provas
+            </button>
+            <button onclick="switchTab('finances')" id="nav-finances" class="tab-btn py-4 px-3 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-navy-800 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-wallet"></i> Valores Ganhos & Despesas
+            </button>
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="tab-btn py-4 px-3 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-navy-800 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-calendar-days"></i> Calendário Letivo
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-navy-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total de Alunos</p>
+                        <h3 id="stat-total-students" class="text-3xl font-extrabold text-navy-900 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-navy-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-navy-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Valores Ganhos</p>
+                        <h3 id="stat-total-revenue" class="text-3xl font-extrabold text-green-600 mt-1">0 MT</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-arrow-trend-up"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-navy-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Despesas</p>
+                        <h3 id="stat-total-expenses" class="text-3xl font-extrabold text-red-600 mt-1">0 MT</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-arrow-trend-down"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-navy-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Saldo Líquido</p>
+                        <h3 id="stat-net-income" class="text-3xl font-extrabold text-navy-800 mt-1">0 MT</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-navy-50 text-navy-800 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Turmas & Gamification summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-navy-100">
+                    <h3 class="text-lg font-bold text-navy-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clock text-navy-700"></i> Distribuição por Turmas (Seg - Sex)
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-navy-50 rounded-xl border border-navy-100">
+                            <span class="text-xs font-bold text-navy-700">TURMA A (07:00 - 08:30)</span>
+                            <h4 id="count-turma-a" class="text-2xl font-black text-navy-900 mt-1">0 Alunos</h4>
+                        </div>
+                        <div class="p-4 bg-navy-50 rounded-xl border border-navy-100">
+                            <span class="text-xs font-bold text-navy-700">TURMA B (08:30 - 10:00)</span>
+                            <h4 id="count-turma-b" class="text-2xl font-black text-navy-900 mt-1">0 Alunos</h4>
+                        </div>
+                        <div class="p-4 bg-navy-50 rounded-xl border border-navy-100">
+                            <span class="text-xs font-bold text-navy-700">TURMA C (14:00 - 16:00)</span>
+                            <h4 id="count-turma-c" class="text-2xl font-black text-navy-900 mt-1">0 Alunos</h4>
+                        </div>
+                        <div class="p-4 bg-navy-50 rounded-xl border border-navy-100">
+                            <span class="text-xs font-bold text-navy-700">TURMA D (16:00 - 17:30)</span>
+                            <h4 id="count-turma-d" class="text-2xl font-black text-navy-900 mt-1">0 Alunos</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-navy-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-navy-900 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-award text-yellow-500"></i> Destaques & Gamificação
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-4">Incentivos: Média ≥ 17 (Bônus), Testes Especiais (Pipocas Simba), MVP (20 valores) e Regra de Faltas/Expulsões.</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
+                            <span class="text-sm font-medium text-yellow-800 flex items-center gap-2"><i class="fa-solid fa-crown text-yellow-600"></i> Alunos MVP (Média 20)</span>
+                            <span id="mvp-count" class="font-bold text-yellow-800 bg-yellow-200 px-3 py-1 rounded-full text-xs">0 Alunos</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
+                            <span class="text-sm font-medium text-blue-900 flex items-center gap-2"><i class="fa-solid fa-star text-blue-600"></i> Bônus Acadêmico (Média ≥ 17)</span>
+                            <span id="bonus-count" class="font-bold text-blue-900 bg-blue-200 px-3 py-1 rounded-full text-xs">0 Registros</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: STUDENTS & GRADES -->
+        <section id="tab-students" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-navy-100">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="relative flex-grow sm:w-80">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa-solid fa-search"></i>
+                        </span>
+                        <input type="text" id="student-search" placeholder="Pesquisar por nome ou encarregado..." oninput="filterStudents()" class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                    </div>
+                    <select id="filter-turma" onchange="filterStudents()" class="py-2 px-3 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-navy-700">
+                        <option value="">Todas Turmas</option>
+                        <option value="A">Turma A</option>
+                        <option value="B">Turma B</option>
+                        <option value="C">Turma C</option>
+                        <option value="D">Turma D</option>
+                    </select>
+                </div>
+                <button onclick="openStudentModal()" class="w-full sm:w-auto bg-navy-800 hover:bg-navy-900 text-white font-medium px-5 py-2.5 rounded-xl shadow transition-all flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-user-plus"></i> Novo Aluno & Provas
+                </button>
+            </div>
+
+            <!-- Students List Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-navy-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-navy-50 text-navy-800 text-xs font-bold uppercase tracking-wider border-b border-navy-100">
+                                <th class="py-4 px-6">Aluno</th>
+                                <th class="py-4 px-6">Contacto Encarregado</th>
+                                <th class="py-4 px-6">Turma / Horário</th>
+                                <th class="py-4 px-6">Assiduidade (30 Dias)</th>
+                                <th class="py-4 px-6">Disciplinas & 3 Provas (Médias)</th>
+                                <th class="py-4 px-6 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: FINANCES -->
+        <section id="tab-finances" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Transaction Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-navy-100 h-fit">
+                    <h3 class="text-lg font-bold text-navy-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-navy-700"></i> Registar Movimento
+                    </h3>
+                    <form id="transaction-form" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tipo de Movimento</label>
+                            <select id="trans-type" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700" onchange="toggleStudentFinanceSelect()">
+                                <option value="revenue">Valores Ganhos (Inscrição / Mensalidade)</option>
+                                <option value="expense">Despesa (Custo Operacional)</option>
+                            </select>
+                        </div>
+                        <div id="student-select-wrapper">
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Aluno Associado (Opcional)</label>
+                            <select id="trans-student" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                                <option value="">Nenhum / Externo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Descrição / Categoria</label>
+                            <input type="text" id="trans-desc" required placeholder="Ex: Mensalidade / Compra de material" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Valor (MT)</label>
+                            <input type="number" id="trans-amount" required min="0" placeholder="500" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Data</label>
+                            <input type="date" id="trans-date" required class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                        </div>
+                        <button type="submit" class="w-full bg-navy-800 hover:bg-navy-900 text-white font-medium py-2.5 rounded-xl shadow transition-all text-sm">
+                            Registar Movimento
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Transactions History Table -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-navy-100 overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-navy-50/50">
+                        <h3 class="font-bold text-navy-900">Histórico de Valores Ganhos & Despesas</h3>
+                        <span id="trans-count" class="text-xs bg-navy-100 text-navy-800 px-2.5 py-1 rounded-full font-medium">0 registos</span>
+                    </div>
+                    <div class="overflow-x-auto flex-grow">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-100">
+                                    <th class="py-3 px-4">Data</th>
+                                    <th class="py-3 px-4">Descrição</th>
+                                    <th class="py-3 px-4">Tipo</th>
+                                    <th class="py-3 px-4">Valor</th>
+                                    <th class="py-3 px-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table-body" class="divide-y divide-gray-100 text-sm">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CALENDAR -->
+        <section id="tab-calendar" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-navy-100 max-w-3xl mx-auto space-y-6">
+                <div class="border-b pb-4">
+                    <h3 class="text-xl font-bold text-navy-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-navy-700"></i> Calendário Letivo (Fevereiro a 14 de Novembro)
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">Estrutura oficial de aulas, turnos e pausas do Nanocentro.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-navy-50 rounded-xl border border-navy-100 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-navy-800 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">1</div>
+                        <div>
+                            <h4 class="font-bold text-navy-900">Início das Aulas (Fevereiro)</h4>
+                            <p class="text-sm text-gray-600 mt-0.5">Início do primeiro ciclo de 3 meses. Novos alunos pagam taxa de inscrição de 200 MT + mensalidade de 500 MT. Alunos que já estudavam pagam apenas a mensalidade.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-yellow-500 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">2</div>
+                        <div>
+                            <h4 class="font-bold text-yellow-900">Primeira Pausa (Férias de 1 Semana)</h4>
+                            <p class="text-sm text-yellow-800 mt-0.5">Intervalo programado de descanso após o primeiro ciclo de aulas.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-navy-50 rounded-xl border border-navy-100 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-navy-800 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">3</div>
+                        <div>
+                            <h4 class="font-bold text-navy-900">Retoma & Segundo Ciclo (Mais 3 Meses)</h4>
+                            <p class="text-sm text-gray-600 mt-0.5">Continuação das aulas regulares de segunda a sexta-feira nas 4 turmas (A, B, C e D).</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-yellow-500 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">4</div>
+                        <div>
+                            <h4 class="font-bold text-yellow-900">Segunda Pausa (Férias de 2 Semanas)</h4>
+                            <p class="text-sm text-yellow-800 mt-0.5">Período estendido de férias para os alunos antes do trimestre final.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-green-50 rounded-xl border border-green-200 flex items-start gap-4">
+                        <div class="w-10 h-10 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">5</div>
+                        <div>
+                            <h4 class="font-bold text-green-900">Reta Final & Conclusão (14 de Novembro)</h4>
+                            <p class="text-sm text-green-800 mt-0.5">Encerramento oficial do ano letivo com apuramento de notas, atribuição de prémios MVP e entrega de boletins.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: ADD/EDIT STUDENT & GRADES -->
+    <div id="student-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 id="student-modal-title" class="text-xl font-bold text-navy-900">Cadastrar Aluno & Provas</h3>
+                <button onclick="closeStudentModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="student-form" onsubmit="handleStudentSubmit(event)" class="space-y-6">
+                <input type="hidden" id="student-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nome Completo do Aluno</label>
+                        <input type="text" id="student-name" required placeholder="Ex: Armando Junior" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Contacto do Encarregado</label>
+                        <input type="text" id="student-contact" required placeholder="Ex: +258 84 123 4567" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Turma & Horário (Seg - Sex)</label>
+                        <select id="student-turma" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-navy-700">
+                            <option value="A">Turma A (07:00 - 08:30)</option>
+                            <option value="B">Turma B (08:30 - 10:00)</option>
+                            <option value="C">Turma C (14:00 - 16:00)</option>
+                            <option value="D">Turma D (16:00 - 17:30)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Faltas (Últimos 30 Dias)</label>
+                        <input type="number" id="student-absences" min="0" value="0" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Retiradas da Sala (30 Dias)</label>
+                        <input type="number" id="student-removals" min="0" value="0" class="w-full py-2 px-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-navy-700">
+                    </div>
+                </div>
+
+                <div class="flex items-center pt-2">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="student-is-new" class="w-5 h-5 accent-navy-800 rounded">
+                        <span class="text-sm font-semibold text-navy-900">Novo Aluno <span class="text-xs font-normal text-gray-500">(Paga Inscrição 200 MT + Mensalidade 500 MT)</span></span>
+                    </label>
+                </div>
+
+                <!-- 8 Disciplines & 3 Provas Each -->
+                <div class="border-t pt-4">
+                    <h4 class="font-bold text-navy-900 text-sm mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-navy-700"></i> Disciplinas e 3 Provas por Trimestre (0-20 valores)
+                    </h4>
+                    
+                    <div class="space-y-4" id="disciplines-container">
+                        <!-- Gerado dinamicamente para cada disciplina -->
+                    </div>
+                </div>
+
+                <!-- Gamification marker -->
+                <div class="border-t pt-4">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="student-simba" class="w-5 h-5 accent-yellow-500 rounded">
+                        <span class="text-sm font-medium text-gray-800">Testes Especiais: Vencedor de <span class="font-bold text-yellow-600"><i class="fa-solid fa-cookie-bite"></i> Pipocas Simba</span></span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" onclick="closeStudentModal()" class="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="px-6 py-2.5 bg-navy-800 hover:bg-navy-900 text-white rounded-xl text-sm font-medium shadow">Guardar Aluno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let app, db, auth, userId = null;
+        let studentsData = [];
+        let transactionsData = [];
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'centro-saber-mais-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project"
+        };
+
+        const disciplineKeys = [
+            { id: 'portugues', label: 'Português' },
+            { id: 'matematica', label: 'Matemática' },
+            { id: 'ciencias-sociais', label: 'Ciências Sociais' },
+            { id: 'ciencias-naturais', label: 'Ciências Naturais' },
+            { id: 'ingles', label: 'Inglês' },
+            { id: 'geografia', label: 'Geografia' },
+            { id: 'biologia', label: 'Biologia' },
+            { id: 'historia', label: 'História' }
+        ];
+
+        window.onload = async function() {
+            document.getElementById('trans-date').valueAsDate = new Date();
+            buildModalDisciplinesInputs();
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                const authStatus = document.getElementById('auth-status');
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                authStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Conectado ao Firebase`;
+                initFirestoreListeners();
+
+            } catch (err) {
+                console.warn("Firebase auth warning or demo fallback:", err);
+                document.getElementById('auth-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400"></span> Modo Local (Demo)`;
+                initLocalDemoMode();
+            }
+
+            // Logo persistence
+            const logoInput = document.getElementById('logo-input');
+            logoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const preview = document.getElementById('logo-preview');
+                        const icon = document.getElementById('logo-icon');
+                        preview.src = evt.target.result;
+                        preview.classList.remove('hidden');
+                        icon.classList.add('hidden');
+                        localStorage.setItem('saber_mais_logo', evt.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            const savedLogo = localStorage.getItem('saber_mais_logo');
+            if (savedLogo) {
+                const preview = document.getElementById('logo-preview');
+                const icon = document.getElementById('logo-icon');
+                preview.src = savedLogo;
+                preview.classList.remove('hidden');
+                icon.classList.add('hidden');
+            }
+        };
+
+        function buildModalDisciplinesInputs() {
+            const container = document.getElementById('disciplines-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            disciplineKeys.forEach(disc => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 p-3 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-4 gap-2 items-center";
+                div.innerHTML = `
+                    <span class="text-xs font-bold text-navy-900">${disc.label}</span>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 uppercase">Prova 1</label>
+                        <input type="number" step="0.1" min="0" max="20" id="grade-${disc.id}-p1" class="w-full py-1 px-2 border border-gray-200 rounded-lg text-xs bg-white" placeholder="0-20">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 uppercase">Prova 2</label>
+                        <input type="number" step="0.1" min="0" max="20" id="grade-${disc.id}-p2" class="w-full py-1 px-2 border border-gray-200 rounded-lg text-xs bg-white" placeholder="0-20">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 uppercase">Prova 3</label>
+                        <input type="number" step="0.1" min="0" max="20" id="grade-${disc.id}-p3" class="w-full py-1 px-2 border border-gray-200 rounded-lg text-xs bg-white" placeholder="0-20">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function initFirestoreListeners() {
+            if (!userId || !db) return;
+
+            const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+            onSnapshot(studentsCol, (snapshot) => {
+                studentsData = [];
+                snapshot.forEach(docSnap => {
+                    studentsData.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderAll();
+            }, (error) => {
+                console.error("Students sync error:", error);
+            });
+
+            const transCol = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
+            onSnapshot(transCol, (snapshot) => {
+                transactionsData = [];
+                snapshot.forEach(docSnap => {
+                    transactionsData.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderAll();
+            }, (error) => {
+                console.error("Transactions sync error:", error);
+            });
+        }
+
+        function initLocalDemoMode() {
+            studentsData = [
+                { 
+                    id: '1', name: 'Carla Mondlane', contact: '+258 84 987 6543', turma: 'A', isNew: true, absences: 2, removals: 1, simba: true,
+                    grades: { portugues: {p1: 18, p2: 17, p3: 19}, matematica: {p1: 16, p2: 15, p3: 17} } 
+                },
+                { 
+                    id: '2', name: 'Nelson Tembe', contact: '+258 82 345 6789', turma: 'B', isNew: false, absences: 8, removals: 0, simba: false,
+                    grades: { portugues: {p1: 20, p2: 20, p3: 20}, matematica: {p1: 19, p2: 18, p3: 20} } 
+                }
+            ];
+            transactionsData = [
+                { id: 't1', type: 'revenue', desc: 'Inscrição + Mensalidade - Carla Mondlane', amount: 700, date: '2026-02-01' },
+                { id: 't2', type: 'revenue', desc: 'Mensalidade - Nelson Tembe', amount: 500, date: '2026-02-01' }
+            ];
+            renderAll();
+        }
+
+        window.switchTab = function(tabName) {
+            ['dashboard', 'students', 'finances', 'calendar'].forEach(t => {
+                const tabElem = document.getElementById(`tab-${t}`);
+                const navElem = document.getElementById(`nav-${t}`);
+                if (tabElem) tabElem.classList.add('hidden');
+                if (navElem) {
+                    navElem.classList.remove('border-navy-800', 'text-navy-800');
+                    navElem.classList.add('border-transparent', 'text-gray-500');
+                }
+            });
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeNav) {
+                activeNav.classList.add('border-navy-800', 'text-navy-800');
+                activeNav.classList.remove('border-transparent', 'text-gray-500');
+            }
+        }
+
+        function renderAll() {
+            renderDashboardStats();
+            renderStudentsTable();
+            renderTransactionsTable();
+            updateStudentDropdowns();
+        }
+
+        function renderDashboardStats() {
+            const totalStudentsElem = document.getElementById('stat-total-students');
+            if (totalStudentsElem) totalStudentsElem.innerText = studentsData.length;
+
+            let totalRev = 0;
+            let totalExp = 0;
+            transactionsData.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                if (t.type === 'revenue') totalRev += amt;
+                else if (t.type === 'expense') totalExp += amt;
+            });
+
+            const revElem = document.getElementById('stat-total-revenue');
+            const expElem = document.getElementById('stat-total-expenses');
+            if (revElem) revElem.innerText = `${totalRev.toLocaleString()} MT`;
+            if (expElem) expElem.innerText = `${totalExp.toLocaleString()} MT`;
+            
+            const net = totalRev - totalExp;
+            const netElem = document.getElementById('stat-net-income');
+            if (netElem) {
+                netElem.innerText = `${net.toLocaleString()} MT`;
+                netElem.className = `text-3xl font-extrabold mt-1 ${net >= 0 ? 'text-navy-800' : 'text-red-600'}`;
+            }
+
+            const counts = { A: 0, B: 0, C: 0, D: 0 };
+            studentsData.forEach(s => {
+                if (counts[s.turma] !== undefined) counts[s.turma]++;
+            });
+            if (document.getElementById('count-turma-a')) document.getElementById('count-turma-a').innerText = `${counts.A} Alunos`;
+            if (document.getElementById('count-turma-b')) document.getElementById('count-turma-b').innerText = `${counts.B} Alunos`;
+            if (document.getElementById('count-turma-c')) document.getElementById('count-turma-c').innerText = `${counts.C} Alunos`;
+            if (document.getElementById('count-turma-d')) document.getElementById('count-turma-d').innerText = `${counts.D} Alunos`;
+
+            let mvpCount = 0;
+            let bonusCount = 0;
+
+            studentsData.forEach(s => {
+                const absences = parseInt(s.absences) || 0;
+                const removals = parseInt(s.removals) || 0;
+                const penaltyActive = absences >= 7 || removals >= 7;
+
+                if (s.grades && !penaltyActive) {
+                    let hasMvp = false;
+                    Object.values(s.grades).forEach(pObj => {
+                        if (pObj) {
+                            const p1 = parseFloat(pObj.p1) || 0;
+                            const p2 = parseFloat(pObj.p2) || 0;
+                            const p3 = parseFloat(pObj.p3) || 0;
+                            const countValid = [pObj.p1, pObj.p2, pObj.p3].filter(v => v !== undefined && v !== '').length;
+                            if (countValid > 0) {
+                                const avg = (p1 + p2 + p3) / countValid;
+                                if (avg >= 17) bonusCount++;
+                                if (avg === 20) hasMvp = true;
+                            }
+                        }
+                    });
+                    if (hasMvp) mvpCount++;
+                }
+            });
+
+            if (document.getElementById('mvp-count')) document.getElementById('mvp-count').innerText = `${mvpCount} Alunos`;
+            if (document.getElementById('bonus-count')) document.getElementById('bonus-count').innerText = `${bonusCount} Registros`;
+        }
+
+        function renderStudentsTable() {
+            const tbody = document.getElementById('students-table-body');
+            if (!tbody) return;
+            const searchInput = document.getElementById('student-search');
+            const filterTurmaInput = document.getElementById('filter-turma');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const filterTurma = filterTurmaInput ? filterTurmaInput.value : '';
+
+            tbody.innerHTML = '';
+
+            const filtered = studentsData.filter(s => {
+                const matchSearch = s.name.toLowerCase().includes(search) || s.contact.toLowerCase().includes(search);
+                const matchTurma = !filterTurma || s.turma === filterTurma;
+                return matchSearch && matchTurma;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400">Nenhum aluno encontrado.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                let badgesHtml = '';
+                let isMvp = false;
+                let hasBonus = false;
+
+                const absences = parseInt(s.absences) || 0;
+                const removals = parseInt(s.removals) || 0;
+                const penaltyActive = absences >= 7 || removals >= 7;
+
+                if (s.grades && !penaltyActive) {
+                    Object.values(s.grades).forEach(pObj => {
+                        if (pObj) {
+                            const p1 = parseFloat(pObj.p1) || 0;
+                            const p2 = parseFloat(pObj.p2) || 0;
+                            const p3 = parseFloat(pObj.p3) || 0;
+                            const countValid = [pObj.p1, pObj.p2, pObj.p3].filter(v => v !== undefined && v !== '').length;
+                            if (countValid > 0) {
+                                const avg = (p1 + p2 + p3) / countValid;
+                                if (avg === 20) isMvp = true;
+                                if (avg >= 17) hasBonus = true;
+                            }
+                        }
+                    });
+                }
+
+                if (penaltyActive) {
+                    badgesHtml += `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit"><i class="fa-solid fa-triangle-exclamation"></i> Bônus Perdidos (Faltas/Expulsões)</span>`;
+                } else {
+                    if (isMvp) badgesHtml += `<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit"><i class="fa-solid fa-crown text-yellow-600"></i> MVP (Média 20)</span>`;
+                    else if (hasBonus) badgesHtml += `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit"><i class="fa-solid fa-star text-blue-600"></i> Bônus (Média ≥17)</span>`;
+                }
+
+                if (s.simba) badgesHtml += `<span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit mt-1"><i class="fa-solid fa-cookie-bite"></i> Pipocas Simba</span>`;
+
+                let gradesSummary = '<div class="grid grid-cols-2 gap-x-2 text-[11px] text-gray-600">';
+                disciplineKeys.forEach(disc => {
+                    const pObj = s.grades ? s.grades[disc.id] : null;
+                    if (pObj && (pObj.p1 !== undefined || pObj.p2 !== undefined || pObj.p3 !== undefined)) {
+                        const p1 = parseFloat(pObj.p1) || 0;
+                        const p2 = parseFloat(pObj.p2) || 0;
+                        const p3 = parseFloat(pObj.p3) || 0;
+                        const countValid = [pObj.p1, pObj.p2, pObj.p3].filter(v => v !== undefined && v !== '').length;
+                        if (countValid > 0) {
+                            const avg = (p1 + p2 + p3) / countValid;
+                            const isHigh = avg >= 17 && !penaltyActive;
+                            gradesSummary += `<div>${disc.label.substring(0,6)}: <span class="font-bold ${isHigh ? 'text-blue-600' : 'text-navy-900'}">${avg.toFixed(1)}</span></div>`;
+                        }
+                    }
+                });
+                gradesSummary += '</div>';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/80 transition-all border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-semibold text-navy-900">
+                        ${s.name}
+                        ${s.isNew ? '<span class="ml-2 bg-green-100 text-green-800 text-[10px] px-2 py-0.5 rounded-full">Novo Aluno</span>' : '<span class="ml-2 bg-gray-100 text-gray-700 text-[10px] px-2 py-0.5 rounded-full">Antigo</span>'}
+                    </td>
+                    <td class="py-4 px-6 text-gray-600">${s.contact}</td>
+                    <td class="py-4 px-6"><span class="bg-navy-50 text-navy-800 font-bold px-2.5 py-1 rounded-lg text-xs">Turma ${s.turma}</span></td>
+                    <td class="py-4 px-6 text-xs text-gray-600">
+                        <div>Faltas: <span class="font-bold ${absences >= 7 ? 'text-red-600' : 'text-navy-900'}">${absences}</span></div>
+                        <div>Expulsões: <span class="font-bold ${removals >= 7 ? 'text-red-600' : 'text-navy-900'}">${removals}</span></div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="space-y-1.5">
+                            ${gradesSummary}
+                            <div class="flex flex-wrap gap-1">${badgesHtml || '<span class="text-gray-400 text-xs">Sem notas registadas</span>'}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-right space-x-2">
+                        <button onclick="editStudent('${s.id}')" class="text-navy-700 hover:text-navy-900 bg-navy-50 hover:bg-navy-100 p-2 rounded-xl transition-all" title="Editar Aluno"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition-all" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.filterStudents = function() {
+            renderStudentsTable();
+        }
+
+        window.openStudentModal = function(studentId = null) {
+            const form = document.getElementById('student-form');
+            if (form) form.reset();
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-modal-title').innerText = 'Cadastrar Aluno & Provas';
+            document.getElementById('student-absences').value = 0;
+            document.getElementById('student-removals').value = 0;
+            buildModalDisciplinesInputs();
+
+            if (studentId) {
+                const s = studentsData.find(item => item.id === studentId);
+                if (s) {
+                    document.getElementById('student-modal-title').innerText = 'Editar Aluno & Provas';
+                    document.getElementById('student-id').value = s.id;
+                    document.getElementById('student-name').value = s.name;
+                    document.getElementById('student-contact').value = s.contact;
+                    document.getElementById('student-turma').value = s.turma;
+                    document.getElementById('student-absences').value = s.absences || 0;
+                    document.getElementById('student-removals').value = s.removals || 0;
+                    document.getElementById('student-is-new').checked = !!s.isNew;
+                    document.getElementById('student-simba').checked = !!s.simba;
+
+                    if (s.grades) {
+                        disciplineKeys.forEach(disc => {
+                            const pObj = s.grades[disc.id];
+                            if (pObj) {
+                                if (pObj.p1 !== undefined) document.getElementById(`grade-${disc.id}-p1`).value = pObj.p1;
+                                if (pObj.p2 !== undefined) document.getElementById(`grade-${disc.id}-p2`).value = pObj.p2;
+                                if (pObj.p3 !== undefined) document.getElementById(`grade-${disc.id}-p3`).value = pObj.p3;
+                            }
+                        });
+                    }
+                }
+            }
+
+            document.getElementById('student-modal').classList.remove('hidden');
+        }
+
+        window.closeStudentModal = function() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
+
+        window.handleStudentSubmit = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('student-id').value;
+            const name = document.getElementById('student-name').value;
+            const contact = document.getElementById('student-contact').value;
+            const turma = document.getElementById('student-turma').value;
+            const absences = parseInt(document.getElementById('student-absences').value) || 0;
+            const removals = parseInt(document.getElementById('student-removals').value) || 0;
+            const isNew = document.getElementById('student-is-new').checked;
+            const simba = document.getElementById('student-simba').checked;
+
+            const grades = {};
+            disciplineKeys.forEach(disc => {
+                const p1Val = document.getElementById(`grade-${disc.id}-p1`).value;
+                const p2Val = document.getElementById(`grade-${disc.id}-p2`).value;
+                const p3Val = document.getElementById(`grade-${disc.id}-p3`).value;
+
+                if (p1Val !== '' || p2Val !== '' || p3Val !== '') {
+                    grades[disc.id] = {
+                        p1: p1Val !== '' ? parseFloat(p1Val) : '',
+                        p2: p2Val !== '' ? parseFloat(p2Val) : '',
+                        p3: p3Val !== '' ? parseFloat(p3Val) : ''
+                    };
+                }
+            });
+
+            const studentDataObj = { name, contact, turma, absences, removals, isNew, simba, grades };
+
+            try {
+                if (userId && db) {
+                    if (id) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', id), studentDataObj);
+                    } else {
+                        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'students'), studentDataObj);
+                        const feeAmount = isNew ? 700 : 500;
+                        const feeDesc = isNew ? `Inscrição (200) + Mensalidade (500) - ${name}` : `Mensalidade (Antigo) - ${name}`;
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), {
+                            type: 'revenue',
+                            desc: feeDesc,
+                            amount: feeAmount,
+                            date: new Date().toISOString().split('T')[0],
+                            studentId: docRef.id
+                        });
+                    }
+                } else {
+                    if (id) {
+                        const idx = studentsData.findIndex(s => s.id === id);
+                        if (idx !== -1) studentsData[idx] = { id, ...studentDataObj };
+                    } else {
+                        const newId = 'local_' + Date.now();
+                        studentsData.push({ id: newId, ...studentDataObj });
+                        const feeAmount = isNew ? 700 : 500;
+                        transactionsData.push({
+                            id: 'trans_' + Date.now(),
+                            type: 'revenue',
+                            desc: isNew ? `Inscrição + Mensalidade - ${name}` : `Mensalidade (Antigo) - ${name}`,
+                            amount: feeAmount,
+                            date: new Date().toISOString().split('T')[0]
+                        });
+                    }
+                    renderAll();
+                }
+                closeStudentModal();
+            } catch (err) {
+                console.error("Error saving student:", err);
+            }
+        }
+
+        window.editStudent = function(id) {
+            openStudentModal(id);
+        }
+
+        window.deleteStudent = async function(id) {
+            if (confirm("Tem certeza que deseja remover este aluno?")) {
+                try {
+                    if (userId && db) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', id));
+                    } else {
+                        studentsData = studentsData.filter(s => s.id !== id);
+                        renderAll();
+                    }
+                } catch (err) {
+                    console.error("Error deleting student:", err);
+                }
+            }
+        }
+
+        window.toggleStudentFinanceSelect = function() {
+            const type = document.getElementById('trans-type').value;
+            const wrapper = document.getElementById('student-select-wrapper');
+            if (type === 'expense') {
+                wrapper.classList.add('hidden');
+            } else {
+                wrapper.classList.remove('hidden');
+            }
+        }
+
+        function updateStudentDropdowns() {
+            const select = document.getElementById('trans-student');
+            if (!select) return;
+            select.innerHTML = '<option value="">Nenhum / Externo</option>';
+            studentsData.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.innerText = s.name;
+                select.appendChild(opt);
+            });
+        }
+
+        window.handleTransactionSubmit = async function(e) {
+            e.preventDefault();
+            const type = document.getElementById('trans-type').value;
+            const studentId = document.getElementById('trans-student').value;
+            const desc = document.getElementById('trans-desc').value;
+            const amount = parseFloat(document.getElementById('trans-amount').value);
+            const date = document.getElementById('trans-date').value;
+
+            const transObj = { type, studentId, desc, amount, date };
+
+            try {
+                if (userId && db) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), transObj);
+                } else {
+                    transactionsData.push({ id: 'local_' + Date.now(), ...transObj });
+                    renderAll();
+                }
+                document.getElementById('transaction-form').reset();
+                document.getElementById('trans-date').valueAsDate = new Date();
+                toggleStudentFinanceSelect();
+            } catch (err) {
+                console.error("Error saving transaction:", err);
+            }
+        }
+
+        function renderTransactionsTable() {
+            const tbody = document.getElementById('transactions-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            document.getElementById('trans-count').innerText = `${transactionsData.length} registos`;
+
+            if (transactionsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400">Nenhum movimento financeiro registado.</td></tr>`;
+                return;
+            }
+
+            const sorted = [...transactionsData].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            sorted.forEach(t => {
+                const isRev = t.type === 'revenue';
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-all border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-gray-600 text-sm">${t.date}</td>
+                    <td class="py-3 px-4 font-medium text-navy-900">${t.desc}</td>
+                    <td class="py-3 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full ${isRev ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${isRev ? 'Valores Ganhos' : 'Despesa'}</span></td>
+                    <td class="py-3 px-4 font-bold ${isRev ? 'text-green-600' : 'text-red-600'}">${isRev ? '+' : '-'}${parseFloat(t.amount).toLocaleString()} MT</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="deleteTransaction('${t.id}')" class="text-red-600 hover:text-red-800 p-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.deleteTransaction = async function(id) {
+            if (confirm("Deseja eliminar esta transação?")) {
+                try {
+                    if (userId && db) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
+                    } else {
+                        transactionsData = transactionsData.filter(t => t.id !== id);
+                        renderAll();
+                    }
+                } catch (err) {
+                    console.error("Error deleting transaction:", err);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
